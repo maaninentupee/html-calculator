@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laskin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .calculator {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            display: inline-block;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .calculator-display {
+            width: 100%;
+            height: 40px;
+            background: #eee;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            text-align: right;
+            padding: 5px;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .button-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+
+        .button {
+            padding: 10px;
+            font-size: 1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background: #0056b3;
+        }
+
+        .button.clear {
+            background: #dc3545;
+        }
+
+        .button.clear:hover {
+            background: #a71d2a;
+        }
+
+        .button.equals {
+            background: #28a745;
+        }
+
+        .button.equals:hover {
+            background: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+    <h1>Laskin</h1>
+    <div class="calculator">
+        <input type="text" id="display" class="calculator-display" readonly>
+        <div class="button-container">
+            <button class="button" onclick="appendToDisplay('7')">7</button>
+            <button class="button" onclick="appendToDisplay('8')">8</button>
+            <button class="button" onclick="appendToDisplay('9')">9</button>
+            <button class="button" onclick="appendToDisplay('/')">/</button>
+
+            <button class="button" onclick="appendToDisplay('4')">4</button>
+            <button class="button" onclick="appendToDisplay('5')">5</button>
+            <button class="button" onclick="appendToDisplay('6')">6</button>
+            <button class="button" onclick="appendToDisplay('*')">*</button>
+
+            <button class="button" onclick="appendToDisplay('1')">1</button>
+            <button class="button" onclick="appendToDisplay('2')">2</button>
+            <button class="button" onclick="appendToDisplay('3')">3</button>
+            <button class="button" onclick="appendToDisplay('-')">-</button>
+
+            <button class="button" onclick="appendToDisplay('.')">.</button>
+            <button class="button" onclick="appendToDisplay('0')">0</button>
+            <button class="button equals" onclick="calculateResult()">=</button>
+            <button class="button" onclick="appendToDisplay('+')">+</button>
+
+            <button class="button clear" onclick="clearDisplay()">C</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+
+        // Lisätään näppäimistötuki
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            if (/[0-9\+\-\*\/\.]/.test(key)) {
+                appendToDisplay(key);
+            } else if (key === 'Enter') {
+                calculateResult();
+            } else if (key === 'Escape') {
+                clearDisplay();
+            }
+        });
+
+        function appendToDisplay(value) {
+            const lastChar = display.value.slice(-1);
+            
+            // Estä useampi desimaalipiste samassa numerossa
+            if (value === '.' && display.value.split(/[\+\-\*\/]/).pop().includes('.')) {
+                return;
+            }
+            
+            // Estä peräkkäiset operaattorit
+            if (['+', '-', '*', '/'].includes(lastChar) && ['+', '-', '*', '/'].includes(value)) {
+                return;
+            }
+            
+            display.value += value;
+        }
+
+        function clearDisplay() {
+            display.value = '';
+        }
+
+        function calculateResult() {
+            try {
+                // Tallenna alkuperäinen lauseke
+                const expression = display.value;
+                
+                // Turvallinen tapa laskea tulos ilman eval()-funktiota
+                const sanitizedExpression = expression
+                    .replace(/[^0-9\+\-\*\/\.\s]/g, '') // Salli vain numerot ja operaattorit
+                    .replace(/[\+\-\*\/]+$/, ''); // Poista operaattorit lopusta
+
+                if (!sanitizedExpression) return;
+
+                // Käytä Function-konstruktoria eval():in sijaan
+                const result = new Function('return ' + sanitizedExpression)();
+                
+                // Tarkista onko tulos järkevä
+                if (!isFinite(result)) {
+                    throw new Error('Virheellinen laskutoimitus');
+                }
+
+                // Näytä alkuperäinen lauseke, =-merkki ja pyöristetty tulos
+                const roundedResult = Math.round(result * 100000000) / 100000000;
+                display.value = `${expression} = ${roundedResult}`;
+            } catch (error) {
+                display.value = 'Virhe';
+                setTimeout(() => display.value = '', 1500);
+            }
+        }
+    </script>
+    <footer>
+        <p>Lähteet:</p>
+        <ul>
+            <li><a href="https://developer.mozilla.org/" target="_blank">MDN Web Docs</a></li>
+            <li><a href="https://www.w3schools.com/" target="_blank">W3Schools</a></li>
+        </ul>
+    </footer>
+</body>
+</html>
